@@ -1,0 +1,147 @@
+diff --git a/src/main/java/org/zifeng/skilltree/client/renderer/PlayerRingLayer.java b/src/main/java/org/zifeng/skilltree/client/renderer/PlayerRingLayer.java
+--- a/src/main/java/org/zifeng/skilltree/client/renderer/PlayerRingLayer.java	2026-08-25 23:08:01.898368580 +0000
++++ b/src/main/java/org/zifeng/skilltree/client/renderer/PlayerRingLayer.java	2026-08-25 23:08:02.760297153 +0000
+@@ -1,15 +1,11 @@
+ package org.zifeng.skilltree.client.renderer;
+ 
+-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+ import com.mojang.blaze3d.vertex.PoseStack;
+ import com.mojang.blaze3d.vertex.VertexConsumer;
+-import com.mojang.blaze3d.vertex.VertexFormat;
+ import net.minecraft.client.model.PlayerModel;
+ import net.minecraft.client.player.AbstractClientPlayer;
+ import net.minecraft.client.renderer.MultiBufferSource;
+-import net.minecraft.client.renderer.RenderStateShard;
+ import net.minecraft.client.renderer.RenderType;
+-import net.minecraft.resources.ResourceLocation;
+ import net.minecraft.client.renderer.entity.RenderLayerParent;
+ import net.minecraft.client.renderer.entity.layers.RenderLayer;
+ import org.joml.Matrix4f;
+@@ -27,9 +23,6 @@
+  */
+ public class PlayerRingLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+ 
+-    private static final ResourceLocation END_SKY_TEXTURE = new ResourceLocation("minecraft", "textures/environment/end_sky.png");
+-    private static final ResourceLocation END_PORTAL_TEXTURE = new ResourceLocation("minecraft", "textures/entity/end_portal.png");
+-
+     /** 环内半径（格） */
+     private static final float RING_INNER = 1.0f;
+     /** 环外半径（格） */
+@@ -44,35 +37,11 @@
+     /** 环带分段数 */
+     private static final int SEGMENTS = 48;
+ 
+-    /** 末地传送门星空通道（复制原版 END_PORTAL + NO_CULL + 半透明，支持混合 + 深度测试防透视） */
+-    private static final RenderType RING_STAR = RenderType.create(
+-            "zifeng_ring_star",
+-            DefaultVertexFormat.POSITION,
+-            VertexFormat.Mode.QUADS,
+-            1536, false, false,
+-            RenderType.CompositeState.builder()
+-                    .setShaderState(RenderStateShard.RENDERTYPE_END_PORTAL_SHADER)
+-                    .setTextureState(RenderStateShard.MultiTextureStateShard.builder()
+-                            .add(END_SKY_TEXTURE, false, false)
+-                            .add(END_PORTAL_TEXTURE, false, false)
+-                            .build())
+-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+-                    .setCullState(RenderStateShard.NO_CULL)
+-                    .setWriteMaskState(RenderStateShard.COLOR_WRITE)
+-                    .createCompositeState(false));
+-
+-    /** 描边/渐变环通道（POSITION_COLOR，半透明，无剔除） */
+-    private static final RenderType RING_OVERLAY = RenderType.create(
+-            "zifeng_ring_overlay",
+-            DefaultVertexFormat.POSITION_COLOR,
+-            VertexFormat.Mode.QUADS,
+-            256, false, false,
+-            RenderType.CompositeState.builder()
+-                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+-                    .setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+-                    .setCullState(RenderStateShard.NO_CULL)
+-                    .createCompositeState(false));
++    /** 1.20.1 public vanilla end-portal channel (POSITION vertex format). */
++    private static final RenderType RING_STAR = RenderType.endPortal();
++
++    /** 1.20.1 public translucent POSITION_COLOR channel; suitable for the colored overlay. */
++    private static final RenderType RING_OVERLAY = RenderType.lightning();
+ 
+     public PlayerRingLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
+         super(renderer);
+diff --git a/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java b/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
+--- a/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:08:01.877529499 +0000
++++ b/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:08:02.760162059 +0000
+@@ -61,7 +61,7 @@
+ 
+     @Override
+     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
++        renderBackground(guiGraphics);
+         super.render(guiGraphics, mouseX, mouseY, partialTick);
+         renderTooltip(guiGraphics, mouseX, mouseY);
+     }
+diff --git a/src/main/java/org/zifeng/skilltree/client/screen/SkillTreeScreen.java b/src/main/java/org/zifeng/skilltree/client/screen/SkillTreeScreen.java
+--- a/src/main/java/org/zifeng/skilltree/client/screen/SkillTreeScreen.java	2026-08-25 23:08:01.885630601 +0000
++++ b/src/main/java/org/zifeng/skilltree/client/screen/SkillTreeScreen.java	2026-08-25 23:08:02.759996658 +0000
+@@ -165,7 +165,7 @@
+ 
+     @Override
+     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
++        renderBackground(guiGraphics);
+         this.lastMouseX = mouseX;
+         this.lastMouseY = mouseY;
+ 
+@@ -1259,7 +1259,7 @@
+         addRow(rows, "护甲", SkillEffects.getComputedValue(player, Attributes.ARMOR, rec), "%.1f");
+         addRow(rows, "韧性", SkillEffects.getComputedValue(player, Attributes.ARMOR_TOUGHNESS, rec), "%.1f");
+         // 物理减伤（自定义属性）：护甲减伤 80% 封顶后继续叠的独立减伤层
+-        addRow(rows, "物理减伤", SkillEffects.getComputedValue(player, org.zifeng.skilltree.init.ModAttributes.DAMAGE_REDUCTION, rec) * 100, "%.0f%%");
++        addRow(rows, "物理减伤", SkillEffects.getComputedValue(player, org.zifeng.skilltree.init.ModAttributes.DAMAGE_REDUCTION.get(), rec) * 100, "%.0f%%");
+         // 全能精通：全伤害减免（对所有伤害类型生效，含真伤/混沌/指令）
+         boolean masterOn = rec.getLearnedPoints(Skills.ULT_MASTER) > 0 && rec.isEnabled(Skills.ULT_MASTER);
+         if (masterOn) {
+@@ -1903,7 +1903,7 @@
+     }
+ 
+     @Override
+-    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
++    public boolean mouseScrolled(double mouseX, double mouseY, double verticalAmount) {
+         // 技能点 HUD 位置滚轮调整（2026-08-25）：悬停在 HUD 面板上时
+         // 滚轮 = 调整位置（X行滚轮改X，Y行滚轮改Y）；Shift+滚轮 = 10 点，普通 = 1 点
+         int hudStep = Screen.hasShiftDown() ? 10 : 1;
+diff --git a/src/main/java/org/zifeng/skilltree/event/AuraEvents.java b/src/main/java/org/zifeng/skilltree/event/AuraEvents.java
+--- a/src/main/java/org/zifeng/skilltree/event/AuraEvents.java	2026-08-25 23:08:01.866749580 +0000
++++ b/src/main/java/org/zifeng/skilltree/event/AuraEvents.java	2026-08-25 23:08:02.759702138 +0000
+@@ -295,7 +295,7 @@
+         for (Entity targetEntity : targets) {
+             // 破盾（光环·强化）：目标举盾格挡 → 解除格挡 + 盾牌冷却（原版 Player.disableShield，参考 Draconic 穿透箭破盾逻辑）
+             if (empower && targetEntity instanceof Player p && p.isBlocking() && p.getUseItem().getItem() instanceof ShieldItem) {
+-                p.disableShield();
++                p.disableShield(true);
+             }
+             // DE 守卫水晶特判（光环·强化）：GuardianCrystalEntity 是 Entity 不是 LivingEntity，
+             // 普通伤害完全免疫（getCrystalDamageModifier 返回 0），必须用混沌伤害源（chaotic 标签）攻击。
+@@ -465,7 +465,7 @@
+         var registry = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE);
+         // 1. DE chaos_implosion（自带 chaotic 标签）
+         var deKey = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DAMAGE_TYPE,
+-                net.minecraft.resources.new ResourceLocation("draconicevolution", "chaos_implosion"));
++                new net.minecraft.resources.ResourceLocation("draconicevolution", "chaos_implosion"));
+         var deHolder = registry.getHolder(deKey).orElse(null);
+         if (deHolder != null) {
+             return new DamageSource(deHolder, player);
+diff --git a/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java b/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
+--- a/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java	2026-08-25 23:08:01.872673932 +0000
++++ b/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java	2026-08-25 23:08:02.759847701 +0000
+@@ -671,7 +671,9 @@
+                 ? SkillEffects.getMobDropMultiplier(record) : 1.0;
+         if (mult > 1.0) {
+             // 只对掉落表含"抢夺"条件的生物生效（如骷髅的骨头、僵尸的腐肉；猪肉/皮革不受抢夺影响不放大）
+-            net.minecraft.resources.ResourceKey<LootTable> lootKey = event.getEntity().getLootTable();
++            net.minecraft.resources.ResourceLocation lootLocation = event.getEntity().getLootTable();
++            net.minecraft.resources.ResourceKey<LootTable> lootKey = lootLocation == null ? null
++                    : net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, lootLocation);
+             if (lootKey != null && supportsLooting(lootKey, sp.serverLevel())) {
+                 applyDropMultiplier(event.getDrops(), sp, mult);
+             }
