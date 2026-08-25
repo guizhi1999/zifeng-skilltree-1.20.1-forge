@@ -1,0 +1,20 @@
+--- a/src/main/java/org/zifeng/skilltree/mixin/ItemStackMixin.java
++++ b/src/main/java/org/zifeng/skilltree/mixin/ItemStackMixin.java
+@@ -11,6 +11,8 @@
+ import org.zifeng.skilltree.skill.SkillEffects;
+ import org.zifeng.skilltree.skill.Skills;
+ 
++import java.util.function.Consumer;
++
+ /** 1.20.1 backport: reduce durability loss for players with the mining resonance skill. */
+ @Mixin(ItemStack.class)
+ public abstract class ItemStackMixin {
+@@ -22,7 +24,7 @@
+             ordinal = 0,
+             require = 0
+     )
+-    private int zifeng$reduceDurabilityDamage(int amount, LivingEntity entity) {
++    private int zifeng$reduceDurabilityDamage(int amount, int originalAmount, LivingEntity entity, Consumer<LivingEntity> onBroken) {
+         if (amount > 0 && entity instanceof ServerPlayer player) {
+             PlayerSkillRecord record = PlayerSkillSavedData.get(player.serverLevel()).getOrCreatePlayer(player.getUUID());
+             if (SkillEffects.isEffectAllowedFor(player, record, Skills.MACHINE_UNBREAKABLE)) {
