@@ -1,0 +1,23 @@
+diff -ruN /tmp/fix_old/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java /tmp/fix_new/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
+--- /tmp/fix_old/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:03:34.284734202 +0000
++++ /tmp/fix_new/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:03:34.286330515 +0000
+@@ -5,7 +5,8 @@
+ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.world.entity.player.Inventory;
+-import net.minecraftforge.client.event.RegisterMenuScreensEvent;
++import net.minecraft.client.gui.screens.MenuScreens;
++import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+ import org.zifeng.skilltree.Config;
+ import org.zifeng.skilltree.init.ModMenus;
+ import org.zifeng.skilltree.menu.SkillPointConverterMenu;
+@@ -238,7 +239,7 @@
+         super.removed();
+     }
+ 
+-    public static void registerScreens(RegisterMenuScreensEvent event) {
+-        event.register(ModMenus.SKILL_POINT_CONVERTER.get(), SkillPointConverterScreen::new);
++    public static void registerScreens(FMLClientSetupEvent event) {
++        event.enqueueWork(() -> MenuScreens.register(ModMenus.SKILL_POINT_CONVERTER.get(), SkillPointConverterScreen::new));
+     }
+ }
