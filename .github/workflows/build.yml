@@ -41,6 +41,12 @@ jobs:
         run: |
           cd project
           patch --batch --forward -p4 < ../port.patch
+          if compgen -G "../fixes/*.patch" > /dev/null; then
+            for p in ../fixes/*.patch; do
+              echo "Applying $p"
+              patch --batch --forward -p2 < "$p"
+            done
+          fi
 
       - name: Show target configuration
         working-directory: project
