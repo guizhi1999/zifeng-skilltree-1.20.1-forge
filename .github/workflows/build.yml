@@ -44,7 +44,7 @@ jobs:
           if compgen -G "../fixes/*.patch" > /dev/null; then
             for p in ../fixes/*.patch; do
               echo "Applying $p"
-              patch --batch --forward -p2 < "$p"
+              patch --batch --forward -p1 < "$p"
             done
           fi
 
