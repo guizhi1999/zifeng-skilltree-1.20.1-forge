@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java b/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
+--- a/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
++++ b/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
+@@ -671,10 +671,8 @@
+                 ? SkillEffects.getMobDropMultiplier(record) : 1.0;
+         if (mult > 1.0) {
+             // 只对掉落表含"抢夺"条件的生物生效（如骷髅的骨头、僵尸的腐肉；猪肉/皮革不受抢夺影响不放大）
+             net.minecraft.resources.ResourceLocation lootLocation = event.getEntity().getLootTable();
+-            net.minecraft.resources.ResourceKey<LootTable> lootKey = lootLocation == null ? null
+-                    : net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, lootLocation);
+-            if (lootKey != null && supportsLooting(lootKey, sp.serverLevel())) {
++            if (lootLocation != null && supportsLooting(lootLocation, sp.serverLevel())) {
+                 applyDropMultiplier(event.getDrops(), sp, mult);
+             }
+         }
+@@ -884,7 +882,7 @@
+     }
+ 
+     /** 1.20.1 looting internals differ; normal living drops are safe to multiply directly. */
+-    private static boolean supportsLooting(ResourceKey<LootTable> key, net.minecraft.server.level.ServerLevel level) {
++    private static boolean supportsLooting(net.minecraft.resources.ResourceLocation key, net.minecraft.server.level.ServerLevel level) {
+         return true;
+     }
