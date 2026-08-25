@@ -1,6 +1,6 @@
-diff -ruN /tmp/fix_old/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java /tmp/fix_new/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
---- /tmp/fix_old/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:03:34.284734202 +0000
-+++ /tmp/fix_new/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java	2026-08-25 23:03:34.286330515 +0000
+diff --git a/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java b/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
+--- a/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
++++ b/src/main/java/org/zifeng/skilltree/client/screen/SkillPointConverterScreen.java
 @@ -5,7 +5,8 @@
  import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
  import net.minecraft.network.chat.Component;
