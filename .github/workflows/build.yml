@@ -1,0 +1,68 @@
+name: Build Forge 1.20.1 Mod
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout port repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.8
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Reconstruct backport patch
+        shell: bash
+        run: |
+          cat patch/part-* | base64 -d > port.patch.xz
+          echo "8c479127614fb74b7f389116547bfd9739d3729bd9170f97d7c1cb70ca9cfc48  port.patch.xz" | sha256sum -c -
+          xz -dc port.patch.xz > port.patch
+          echo "7f02c8e72ee5e608341803aa8b3f25e989565e241b3ebb4f683e9711e7412562  port.patch" | sha256sum -c -
+
+      - name: Fetch upstream 1.21.1 source
+        run: git clone --depth 1 https://github.com/aszqb1125763/zifeng_s_custom_skill_tree-.git project
+
+      - name: Apply Minecraft 1.20.1 Forge backport
+        shell: bash
+        run: |
+          cd project
+          patch --batch --forward -p4 < ../port.patch
+
+      - name: Show target configuration
+        working-directory: project
+        run: |
+          java -version
+          gradle --version
+          cat gradle.properties
+
+      - name: Build Forge mod
+        working-directory: project
+        run: gradle --no-daemon clean build --stacktrace
+
+      - name: List build products
+        if: always()
+        working-directory: project
+        run: find build -maxdepth 3 -type f -print 2>/dev/null || true
+
+      - name: Upload installable JAR
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zifeng-skilltree-1.20.1-forge
+          path: project/build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 30
