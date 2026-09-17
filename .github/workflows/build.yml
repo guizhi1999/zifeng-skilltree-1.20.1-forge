@@ -79,6 +79,17 @@ jobs:
           echo "Merged head: $(git rev-parse HEAD)"
           git status --short
 
+      - name: Pack merged source snapshot
+        shell: bash
+        run: tar --exclude=.git --exclude=.gradle --exclude=build -czf merged-source-1.4.1.tar.gz -C project .
+
+      - name: Upload merged source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-source-1.4.1
+          path: merged-source-1.4.1.tar.gz
+          retention-days: 7
+
       - name: Show target configuration
         working-directory: project
         run: |
