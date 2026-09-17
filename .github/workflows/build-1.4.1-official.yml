@@ -1,0 +1,62 @@
+name: Build Zifeng 1.4.1 Forge 1.20.1
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout build repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Checkout upstream official 1.20.1 branch
+        uses: actions/checkout@v4
+        with:
+          repository: aszqb1125763/zifeng_s_custom_skill_tree-
+          ref: '1.20.1'
+          path: upstream
+
+      - name: Remove developer-specific Java home
+        working-directory: upstream
+        run: sed -i '/^org\.gradle\.java\.home=/d' gradle.properties
+
+      - name: Verify version target
+        working-directory: upstream
+        run: |
+          grep '^minecraft_version=1.20.1$' gradle.properties
+          grep '^mod_version=1.4.1$' gradle.properties
+          grep '^forge_version=' gradle.properties
+
+      - name: Build Forge jar
+        working-directory: upstream
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build --stacktrace --no-daemon
+
+      - name: Inspect output
+        working-directory: upstream
+        run: |
+          ls -lah build/libs/
+          JAR=$(find build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*sources*' | head -n 1)
+          test -n "$JAR"
+          jar tf "$JAR" | grep -E 'META-INF/mods.toml|zifeng_s_custom_skill_tree.mixins.json'
+          echo "FINAL_JAR=$JAR" >> "$GITHUB_ENV"
+
+      - name: Upload installable jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: zifeng-skilltree-1.4.1-1.20.1-forge
+          path: ${{ env.FINAL_JAR }}
+          if-no-files-found: error
