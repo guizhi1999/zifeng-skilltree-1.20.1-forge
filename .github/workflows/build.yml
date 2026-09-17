@@ -79,6 +79,17 @@ jobs:
           echo "Merged head: $(git rev-parse HEAD)"
           git status --short
 
+      - name: Apply v1.4.1 post-merge fixes
+        shell: bash
+        run: |
+          cd project
+          if compgen -G "../postmerge-fixes/*.patch" > /dev/null; then
+            for p in ../postmerge-fixes/*.patch; do
+              echo "Applying post-merge $p"
+              patch --batch --forward -p1 < "$p"
+            done
+          fi
+
       - name: Pack merged source snapshot
         shell: bash
         run: tar --exclude=.git --exclude=.gradle --exclude=build -czf merged-source-1.4.1.tar.gz -C project .
