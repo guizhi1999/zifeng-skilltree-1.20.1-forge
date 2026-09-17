@@ -33,13 +33,15 @@ jobs:
           xz -dc port.patch.xz > port.patch
           echo "7f02c8e72ee5e608341803aa8b3f25e989565e241b3ebb4f683e9711e7412562  port.patch" | sha256sum -c -
 
-      - name: Fetch upstream 1.21.1 source
-        run: git clone --depth 1 https://github.com/aszqb1125763/zifeng_s_custom_skill_tree-.git project
+      - name: Fetch upstream history
+        run: git clone https://github.com/aszqb1125763/zifeng_s_custom_skill_tree-.git project
 
-      - name: Apply Minecraft 1.20.1 Forge backport
+      - name: Recreate proven 1.20.1 Forge port on v1.2.9
         shell: bash
         run: |
           cd project
+          git checkout b5c51231d56e1937d7e58b72d19e59cbeaedaada
+          git switch -c forge-1.20.1-port
           patch --batch --forward -p4 < ../port.patch
           if compgen -G "../fixes/*.patch" > /dev/null; then
             for p in ../fixes/*.patch; do
@@ -47,13 +49,26 @@ jobs:
               patch --batch --forward -p1 < "$p"
             done
           fi
+          git config user.name "Forge 1.20.1 Backport"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Forge 1.20.1 backport base"
+
+      - name: Merge upstream v1.4.1 changes
+        shell: bash
+        run: |
+          cd project
+          git merge origin/master --no-edit -X ours
+          sed -i 's/^mod_version=.*/mod_version=1.4.1-1.20.1/' gradle.properties
+          echo "Merged head: $(git rev-parse HEAD)"
+          git status --short
 
       - name: Show target configuration
         working-directory: project
         run: |
           java -version
           gradle --version
-          cat gradle.properties
+          grep -E '^(minecraft_version|forge_version|mod_version)=' gradle.properties
 
       - name: Build Forge mod
         working-directory: project
@@ -68,7 +83,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: zifeng-skilltree-1.20.1-forge
+          name: zifeng-skilltree-1.20.1-forge-1.4.1
           path: project/build/libs/*.jar
           if-no-files-found: error
           retention-days: 30
