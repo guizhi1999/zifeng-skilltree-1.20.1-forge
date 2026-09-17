@@ -1,0 +1,10 @@
+--- a/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
++++ b/src/main/java/org/zifeng/skilltree/event/UltimateEvents.java
+@@ -412,6 +412,7 @@
+                 org.zifeng.skilltree.network.ModNetwork.sendToPlayer(player,
+                         new org.zifeng.skilltree.network.ReviveCooldownS2CPacket(reviveLearned, remaining));
+             }
++        }
+     }
+ 
+     // ============ 浴血奋战（常驻属性：攻击力/生命 +50%，由 SkillEffects 属性修饰符实现）+ 暴击/破甲/死神凝视 ============
