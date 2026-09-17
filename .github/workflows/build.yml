@@ -58,7 +58,23 @@ jobs:
         shell: bash
         run: |
           cd project
+          set +e
           git merge origin/master --no-edit -X ours
+          merge_rc=$?
+          set -e
+          if [ $merge_rc -ne 0 ]; then
+            git rm -f --ignore-unmatch \
+              src/main/java/org/zifeng/skilltree/jade/CreativeEnergyProvider.java \
+              src/main/java/org/zifeng/skilltree/jade/SkillPointConverterProvider.java
+            unresolved=$(git diff --name-only --diff-filter=U)
+            if [ -n "$unresolved" ]; then
+              echo "Unresolved conflicts remain:"
+              echo "$unresolved"
+              exit 1
+            fi
+            git add -A
+            git commit --no-edit
+          fi
           sed -i 's/^mod_version=.*/mod_version=1.4.1-1.20.1/' gradle.properties
           echo "Merged head: $(git rev-parse HEAD)"
           git status --short
